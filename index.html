@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e" id="themeMetaColor">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chime">
+<link rel="manifest" href="/manifest.json">
+<title>Chime</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --bg2: #1a1a2e;
+    --bg3: #16213e;
+    --surface: #1e1e3a;
+    --surface2: #252545;
+    --border: #2a2a4a;
+    --gold: #c9a84c;
+    --gold2: #e8c875;
+    --gold3: #f5e0a0;
+    --text: #e8e8f0;
+    --text2: #9090b0;
+    --text3: #6060808;
+    --accent: #7c6fcd;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .light {
+    --bg: #f0ede8;
+    --bg2: #e8e4dc;
+    --bg3: #ddd8ce;
+    --surface: #fff9f0;
+    --surface2: #f5f0e8;
+    --border: #d4cdc0;
+    --gold: #9a7230;
+    --gold2: #b8882a;
+    --gold3: #7a5820;
+    --text: #2a2420;
+    --text2: #6a6050;
+    --accent: #5a4fad;
+    --shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    transition: background var(--transition), color var(--transition);
+    overflow-x: hidden;
+  }
+
+  /* FLASH OVERLAY */
+  #flash {
+    position: fixed; inset: 0; z-index: 999;
+    background: radial-gradient(ellipse at center, rgba(201,168,76,0.3) 0%, transparent 70%);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.1s;
+  }
+  #flash.active { opacity: 1; }
+
+  /* LAYOUT */
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 40px;
+    min-height: 100dvh;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    transition: background var(--transition);
+  }
+  .logo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  
+  .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition);
+  }
+  .icon-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* CLOCK SECTION */
+  .clock-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 24px;
+    gap: 8px;
+  }
+
+  .clock-ring-wrap {
+    position: relative;
+    width: 200px; height: 200px;
+  }
+  .clock-svg {
+    width: 200px; height: 200px;
+    transform: rotate(-90deg);
+  }
+  .ring-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 3;
+  }
+  .ring-sec {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s cubic-bezier(0.4,0,0.2,1);
+    filter: drop-shadow(0 0 6px var(--gold));
+  }
+  .ring-interval {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+
+  .clock-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .time-display {
+    font-size: 42px;
+    font-weight: 200;
+    letter-spacing: -1px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .date-display {
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .next-chime-info {
+    text-align: center;
+  }
+  .next-label {
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .next-time {
+    font-size: 18px;
+    color: var(--gold);
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  /* STATUS BADGE */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border: 1px solid;
+    transition: all var(--transition);
+  }
+  .status-badge.active {
+    background: rgba(201,168,76,0.1);
+    border-color: rgba(201,168,76,0.3);
+    color: var(--gold2);
+  }
+  .status-badge.inactive {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text2);
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .status-badge.active .dot {
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* MAIN TOGGLE */
+  .main-toggle-wrap {
+    padding: 0 20px 24px;
+    display: flex;
+    gap: 10px;
+  }
+  .main-toggle {
+    flex: 1;
+    height: 52px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .main-toggle.on {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+    border-color: transparent;
+    color: #1a1400;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+  }
+  .test-btn {
+    width: 52px; height: 52px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--gold);
+    font-size: 22px;
+    cursor: pointer;
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .test-btn:hover {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.1);
+  }
+  .test-btn:active { transform: scale(0.95); }
+
+  /* SECTIONS */
+  .section {
+    margin: 0 20px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .section-header {
+    padding: 14px 16px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+  .section-body { padding: 0 16px 14px; }
+
+  /* INTERVAL */
+  .interval-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .preset-btn {
+    height: 38px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .preset-btn.active {
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    color: var(--gold2);
+  }
+  .custom-interval {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .custom-interval input {
+    flex: 1;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 14px;
+    padding: 0 12px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .custom-interval input:focus { border-color: var(--gold); }
+  .unit-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .unit-btn {
+    height: 38px;
+    padding: 0 12px;
+    border: none;
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .unit-btn.active {
+    background: var(--gold);
+    color: #1a1400;
+  }
+
+  /* SOUNDS */
+  .sounds-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sound-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+  }
+  .sound-item.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.08);
+  }
+  .sound-emoji { font-size: 20px; flex-shrink: 0; }
+  .sound-info { flex: 1; min-width: 0; }
+  .sound-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .sound-desc {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sound-sel {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sound-item.selected .sound-sel {
+    border-color: var(--gold);
+    background: var(--gold);
+  }
+  .sound-item.selected .sound-sel::after {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #1a1400;
+  }
+  .sound-preview {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all var(--transition);
+  }
+  .sound-preview:hover { border-color: var(--gold); color: var(--gold); }
+
+  .add-sound-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    width: 100%;
+    margin-top: 4px;
+  }
+  .add-sound-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* VOLUME */
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .vol-icon { font-size: 18px; width: 24px; text-align: center; }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 2px 8px rgba(201,168,76,0.4);
+    cursor: pointer;
+  }
+  .vol-val {
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* OPTIONS */
+  .option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .option-row:last-child { border-bottom: none; }
+  .option-label { font-size: 13px; color: var(--text); }
+  .option-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* TOGGLE SWITCH */
+  .toggle-switch {
+    width: 44px; height: 26px;
+    border-radius: 13px;
+    background: var(--border);
+    position: relative;
+    cursor: pointer;
+    transition: background var(--transition);
+    border: none;
+    flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--gold); }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 3px; left: 3px;
+    transition: transform var(--transition);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .toggle-switch.on::after { transform: translateX(18px); }
+
+  /* HISTORY */
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--surface2);
+    font-size: 12px;
+  }
+  .history-time { color: var(--gold); font-weight: 600; min-width: 50px; font-variant-numeric: tabular-nums; }
+  .history-name { color: var(--text); flex: 1; }
+  .history-strikes { color: var(--text2); }
+
+  .empty-history {
+    text-align: center;
+    padding: 20px;
+    color: var(--text2);
+    font-size: 13px;
+  }
+
+  /* STRIKES */
+  .strikes-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 20px;
+  }
+  .strike-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.2s;
+  }
+  .strike-dot.hit {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* INSTALL BANNER */
+  #installBanner {
+    margin: 0 20px 16px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(124,111,205,0.15));
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    display: none;
+  }
+  #installBanner .ib-text { flex: 1; font-size: 13px; color: var(--text); }
+  #installBanner .ib-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .install-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--gold);
+    color: #1a1400;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not(.dark-forced) {
+      --bg: #f0ede8;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+
+<div class="app">
+  <header>
+    <div class="logo">⬡ Chime</div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeBtn" title="Přepnout téma">☽</button>
+    </div>
+  </header>
+
+  <!-- INSTALL BANNER -->
+  <div id="installBanner">
+    <div style="font-size:24px">📲</div>
+    <div class="ib-text">
+      <div>Přidat na plochu</div>
+      <div class="ib-sub">Funguje offline, jako nativní app</div>
+    </div>
+    <button class="install-btn" id="installBtn">Nainstalovat</button>
+  </div>
+
+  <!-- CLOCK -->
+  <div class="clock-section">
+    <div class="clock-ring-wrap">
+      <svg class="clock-svg" viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="90"/>
+        <circle class="ring-interval" cx="100" cy="100" r="90" id="ringInterval"
+          stroke-dasharray="565.5" stroke-dashoffset="565.5"/>
+        <circle class="ring-sec" cx="100" cy="100" r="90" id="ringSec"
+          stroke-dasharray="565.5" stroke-dashoffset="565.5"/>
+      </svg>
+      <div class="clock-center">
+        <div class="time-display" id="timeDisplay">00:00:00</div>
+        <div class="date-display" id="dateDisplay">—</div>
+      </div>
+    </div>
+
+    <div class="next-chime-info">
+      <div class="next-label">Příští chime</div>
+      <div class="next-time" id="nextChimeTime">—</div>
+    </div>
+
+    <div class="strikes-display" id="strikesDisplay"></div>
+
+    <div class="status-badge inactive" id="statusBadge">
+      <div class="dot"></div>
+      <span id="statusText">Vypnuto</span>
+    </div>
+  </div>
+
+  <!-- MAIN TOGGLE -->
+  <div class="main-toggle-wrap">
+    <button class="main-toggle" id="mainToggle">Spustit Chime</button>
+    <button class="test-btn" id="testBtn" title="Test zvuku">♪</button>
+  </div>
+
+  <!-- INTERVAL -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Interval</div>
+    </div>
+    <div class="section-body">
+      <div class="interval-presets">
+        <button class="preset-btn" data-min="15">15 min</button>
+        <button class="preset-btn active" data-min="30">30 min</button>
+        <button class="preset-btn" data-min="60">1 hod</button>
+        <button class="preset-btn" data-min="120">2 hod</button>
+      </div>
+      <div class="custom-interval">
+        <input type="number" id="customVal" placeholder="Vlastní..." min="1" max="1440">
+        <div class="unit-toggle">
+          <button class="unit-btn active" data-unit="min">min</button>
+          <button class="unit-btn" data-unit="hr">hod</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOUNDS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Zvuk</div>
+    </div>
+    <div class="section-body">
+      <div class="sounds-grid" id="soundsGrid"></div>
+      <input type="file" id="localFileInput" accept="audio/*" style="display:none">
+      <button class="add-sound-btn" id="addSoundBtn">
+        <span style="font-size:18px">📂</span>
+        <span>Nahrát vlastní zvuk ze zařízení</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- VOLUME -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Hlasitost</div>
+    </div>
+    <div class="section-body">
+      <div class="volume-row">
+        <span class="vol-icon" id="volIcon">🔉</span>
+        <input type="range" id="volSlider" min="0" max="100" value="70">
+        <span class="vol-val" id="volVal">70%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTIONS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Nastavení</div>
+    </div>
+    <div class="section-body" style="padding-top:4px">
+      <div class="option-row">
+        <div>
+          <div class="option-label">Počet úderů = hodina</div>
+          <div class="option-sub">V 15:00 zahraje 15× (max 12)</div>
+        </div>
+        <button class="toggle-switch" id="hourStrikeToggle"></button>
+      </div>
+      <div class="option-row">
+        <div>
+          <div class="option-label">Přesné hodiny</div>
+          <div class="option-sub">Vždy zahraje na celou hodinu</div>
+        </div>
+        <button class="toggle-switch on" id="exactHourToggle"></button>
+      </div>
+      <div class="option-row">
+        <div>
+          <div class="option-label">Upozornění na pozadí</div>
+          <div class="option-sub">Udržet aktivní při zamčené obrazovce</div>
+        </div>
+        <button class="toggle-switch" id="wakeLockToggle"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Historie</div>
+    </div>
+    <div class="section-body">
+      <div class="history-list" id="historyList">
+        <div class="empty-history">Zatím žádné chime...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+const state = {
+  running: false,
+  intervalMin: 30,
+  selectedSound: 'sanctus',
+  volume: 0.7,
+  hourStrike: false,
+  exactHour: true,
+  wakeLock: null,
+  isDark: true,
+  nextChimeAt: null,
+  history: [],
+  localSounds: [],      // { id, name, buffer }
+  timer: null,
+  audioCtx: null,
+  masterGain: null,
+};
+
+// ═══════════════════════════════════
+// BUILT-IN SOUNDS (snadno rozšiřitelné)
+// přidej sem další objekt se stejnou strukturou
+// ═══════════════════════════════════
+const BUILT_IN_SOUNDS = [
+  {
+    id: 'cink',
+    name: 'Cink',
+    desc: 'Lehký vysoký tón • C6',
+    emoji: '✦',
+    fn: 'playBell',
+    arg: { pitch: 1047, duration: 0.5, harmonics: [] }
+  },
+  {
+    id: 'sanctus',
+    name: 'Sanctus',
+    desc: 'Kostelní zvon • E4 s harmonikami',
+    emoji: '🔔',
+    fn: 'playBell',
+    arg: { pitch: 330, duration: 2.0, harmonics: [2.0, 3.0, 4.2] }
+  },
+  {
+    id: 'avemaria',
+    name: 'Ave Maria',
+    desc: 'Trojitý hlubší zvon • A3',
+    emoji: '⛪',
+    fn: 'playBell',
+    arg: { pitch: 220, pattern: [0, 0.3, 0.6], duration: 3.0, harmonics: [2.0, 3.0, 4.2, 5.4] }
+  },
+  {
+    id: 'compline',
+    name: 'Compline',
+    desc: 'Večerní dvojúder • D3',
+    emoji: '🌙',
+    fn: 'playBell',
+    arg: { pitch: 147, pattern: [0, 1.2], duration: 5.0, harmonics: [2.0, 3.0, 4.2, 5.4, 6.8] }
+  },
+  {
+    id: 'deathknell',
+    name: 'Death Knell',
+    desc: 'Hluboký pohřební zvon • G2',
+    emoji: '💀',
+    fn: 'playBell',
+    arg: { pitch: 98, duration: 8.0, harmonics: [2.0, 3.0, 4.2, 5.4, 6.8] }
+  },
+  // ─── SEM PŘIDEJ DALŠÍ ZVUKY ───
+  // {
+  //   id: 'mujzvuk',
+  //   name: 'Můj zvon',
+  //   desc: 'Popis zvuku',
+  //   emoji: '🎵',
+  //   fn: 'playBell',
+  //   arg: { pitch: 440, duration: 2.0, harmonics: [2.0, 3.0] }
+  // },
+];
+
+// ═══════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════
+function ensureAudioCtx() {
+  if (!state.audioCtx) {
+    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
+    state.masterGain = state.audioCtx.createGain();
+    state.masterGain.gain.value = state.volume;
+    state.masterGain.connect(state.audioCtx.destination);
+  }
+  if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+}
+
+function playBellStrike(pitch, duration, harmonics, delayOffset, strikes) {
+  ensureAudioCtx();
+  const ctx = state.audioCtx;
+
+  const pattern = strikes > 1
+    ? Array.from({ length: strikes }, (_, i) => i * (duration * 0.4))
+    : [delayOffset || 0];
+
+  pattern.forEach(delay => {
+    const now = ctx.currentTime + delay + 0.05;
+    const partials = [1.0, ...(harmonics || [])];
+
+    partials.forEach((ratio, idx) => {
+      const freq = pitch * ratio;
+      const amp = 0.18 / (idx + 1);
+
+      const o1 = ctx.createOscillator();
+      const o2 = ctx.createOscillator();
+      o1.type = o2.type = 'sine';
+      o1.frequency.value = freq;
+      o2.frequency.value = freq + (Math.random() * 2 - 1);
+
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(amp, now + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      o1.connect(g); o2.connect(g);
+      g.connect(state.masterGain);
+
+      o1.start(now); o2.start(now);
+      o1.stop(now + duration + 0.1);
+      o2.stop(now + duration + 0.1);
+    });
+  });
+}
+
+function playLocalSound(buffer) {
+  ensureAudioCtx();
+  const ctx = state.audioCtx;
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(state.masterGain);
+  src.start(ctx.currentTime + 0.05);
+}
+
+function playSelectedSound(overrideStrikes) {
+  const hour = new Date().getHours() % 12 || 12;
+  const strikes = overrideStrikes !== undefined ? overrideStrikes
+    : (state.hourStrike ? hour : 1);
+
+  // Local sound?
+  const local = state.localSounds.find(s => s.id === state.selectedSound);
+  if (local) {
+    playLocalSound(local.buffer);
+    return strikes;
+  }
+
+  // Built-in
+  const snd = BUILT_IN_SOUNDS.find(s => s.id === state.selectedSound);
+  if (!snd) return strikes;
+
+  const arg = snd.arg;
+  const pattern = arg.pattern || [0];
+  const actualStrikes = state.hourStrike ? hour : pattern.length;
+
+  playBellStrike(arg.pitch, arg.duration, arg.harmonics, 0, actualStrikes);
+  return actualStrikes;
+}
+
+// ═══════════════════════════════════
+// TIMER
+// ═══════════════════════════════════
+function scheduleNext() {
+  clearTimeout(state.timer);
+  if (!state.running) return;
+
+  const now = new Date();
+  let nextMs;
+
+  if (state.exactHour) {
+    // Find next exact hour mark that aligns with interval
+    const intervalMs = state.intervalMin * 60 * 1000;
+    const midnight = new Date(now); midnight.setHours(0,0,0,0);
+    const msSinceMidnight = now - midnight;
+    const nextAligned = Math.ceil(msSinceMidnight / intervalMs) * intervalMs;
+    nextMs = (midnight.getTime() + nextAligned) - now.getTime();
+    if (nextMs <= 500) nextMs += intervalMs;
+    state.nextChimeAt = new Date(now.getTime() + nextMs);
+  } else {
+    nextMs = state.intervalMin * 60 * 1000;
+    state.nextChimeAt = new Date(now.getTime() + nextMs);
+  }
+
+  updateNextChimeDisplay();
+  state.timer = setTimeout(doChime, nextMs);
+}
+
+function doChime() {
+  const strikes = playSelectedSound();
+  flashEffect(strikes);
+  addHistory(strikes);
+  scheduleNext();
+}
+
+function flashEffect(strikes) {
+  const fl = document.getElementById('flash');
+  fl.classList.add('active');
+  setTimeout(() => fl.classList.remove('active'), 400);
+
+  // Animate strike dots
+  const wrap = document.getElementById('strikesDisplay');
+  wrap.innerHTML = '';
+  const count = Math.min(strikes, 24);
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'strike-dot';
+    wrap.appendChild(d);
+    setTimeout(() => d.classList.add('hit'), i * 120);
+  }
+  setTimeout(() => { wrap.innerHTML = ''; }, count * 120 + 2000);
+}
+
+// ═══════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════
+function addHistory(strikes) {
+  const now = new Date();
+  const snd = BUILT_IN_SOUNDS.find(s => s.id === state.selectedSound)
+    || state.localSounds.find(s => s.id === state.selectedSound);
+  const name = snd ? snd.name : state.selectedSound;
+
+  state.history.unshift({
+    time: now.toLocaleTimeString('cs', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    name,
+    strikes
+  });
+  if (state.history.length > 20) state.history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!state.history.length) {
+    el.innerHTML = '<div class="empty-history">Zatím žádné chime...</div>';
+    return;
+  }
+  el.innerHTML = state.history.map(h => `
+    <div class="history-item">
+      <span class="history-time">${h.time}</span>
+      <span class="history-name">${h.name}</span>
+      <span class="history-strikes">${'●'.repeat(Math.min(h.strikes,12))} ${h.strikes > 12 ? '+' : ''}</span>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════
+const CIRC = 2 * Math.PI * 90; // 565.49
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('timeDisplay').textContent = `${h}:${m}:${s}`;
+
+  const days = ['Ne','Po','Út','St','Čt','Pá','So'];
+  const months = ['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+  document.getElementById('dateDisplay').textContent =
+    `${days[now.getDay()]} ${now.getDate()}. ${months[now.getMonth()]}`;
+
+  // Second ring
+  const secFrac = (now.getSeconds() + now.getMilliseconds()/1000) / 60;
+  const secOffset = CIRC * (1 - secFrac);
+  document.getElementById('ringSec').style.strokeDashoffset = secOffset;
+
+  // Interval ring
+  if (state.running && state.nextChimeAt) {
+    const total = state.intervalMin * 60 * 1000;
+    const remaining = state.nextChimeAt - now;
+    const frac = Math.max(0, Math.min(1, 1 - remaining / total));
+    document.getElementById('ringInterval').style.strokeDashoffset = CIRC * (1 - frac);
+  } else {
+    document.getElementById('ringInterval').style.strokeDashoffset = CIRC;
+  }
+}
+
+function updateNextChimeDisplay() {
+  const el = document.getElementById('nextChimeTime');
+  if (!state.running || !state.nextChimeAt) { el.textContent = '—'; return; }
+  const diff = Math.max(0, state.nextChimeAt - Date.now());
+  const totalSec = Math.round(diff / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  el.textContent = `za ${min > 0 ? min+'m ' : ''}${sec}s`;
+}
+
+// ═══════════════════════════════════
+// SOUNDS GRID
+// ═══════════════════════════════════
+function renderSounds() {
+  const grid = document.getElementById('soundsGrid');
+  const allSounds = [
+    ...BUILT_IN_SOUNDS,
+    ...state.localSounds.map(s => ({ ...s, emoji: '📁', desc: 'Vlastní soubor' }))
+  ];
+
+  grid.innerHTML = allSounds.map(s => `
+    <div class="sound-item ${s.id === state.selectedSound ? 'selected' : ''}"
+         data-id="${s.id}" onclick="selectSound('${s.id}')">
+      <span class="sound-emoji">${s.emoji}</span>
+      <div class="sound-info">
+        <div class="sound-name">${s.name}</div>
+        <div class="sound-desc">${s.desc}</div>
+      </div>
+      <button class="sound-preview" onclick="previewSound(event,'${s.id}')">▶</button>
+      <div class="sound-sel"></div>
+    </div>
+  `).join('');
+}
+
+function selectSound(id) {
+  state.selectedSound = id;
+  renderSounds();
+}
+
+function previewSound(e, id) {
+  e.stopPropagation();
+  const prev = state.selectedSound;
+  state.selectedSound = id;
+  playSelectedSound(1);
+  state.selectedSound = prev;
+}
+
+// ═══════════════════════════════════
+// VOLUME
+// ═══════════════════════════════════
+function setVolume(v) {
+  state.volume = v / 100;
+  if (state.masterGain) state.masterGain.gain.value = state.volume;
+  document.getElementById('volVal').textContent = v + '%';
+  const icon = v === 0 ? '🔇' : v < 35 ? '🔈' : v < 70 ? '🔉' : '🔊';
+  document.getElementById('volIcon').textContent = icon;
+}
+
+// ═══════════════════════════════════
+// WAKE LOCK
+// ═══════════════════════════════════
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      state.wakeLock = await navigator.wakeLock.request('screen');
+    } catch(e) { console.log('WakeLock failed', e); }
+  }
+}
+function releaseWakeLock() {
+  if (state.wakeLock) { state.wakeLock.release(); state.wakeLock = null; }
+}
+
+// ═══════════════════════════════════
+// TOGGLE
+// ═══════════════════════════════════
+function toggleOption(id) {
+  const btn = document.getElementById(id);
+  const isOn = btn.classList.toggle('on');
+  return isOn;
+}
+
+// ═══════════════════════════════════
+// MAIN TOGGLE
+// ═══════════════════════════════════
+function toggleMain() {
+  ensureAudioCtx();
+  state.running = !state.running;
+
+  const btn = document.getElementById('mainToggle');
+  const badge = document.getElementById('statusBadge');
+  const text = document.getElementById('statusText');
+
+  if (state.running) {
+    btn.textContent = 'Zastavit Chime';
+    btn.classList.add('on');
+    badge.className = 'status-badge active';
+    text.textContent = 'Aktivní';
+    scheduleNext();
+    if (document.getElementById('wakeLockToggle').classList.contains('on')) requestWakeLock();
+  } else {
+    btn.textContent = 'Spustit Chime';
+    btn.classList.remove('on');
+    badge.className = 'status-badge inactive';
+    text.textContent = 'Vypnuto';
+    clearTimeout(state.timer);
+    state.nextChimeAt = null;
+    updateNextChimeDisplay();
+    releaseWakeLock();
+  }
+}
+
+// ═══════════════════════════════════
+// THEME
+// ═══════════════════════════════════
+function toggleTheme() {
+  state.isDark = !state.isDark;
+  document.body.classList.toggle('light', !state.isDark);
+  document.getElementById('themeBtn').textContent = state.isDark ? '☽' : '☀';
+  document.getElementById('themeMetaColor').content = state.isDark ? '#1a1a2e' : '#f0ede8';
+  localStorage.setItem('chime-theme', state.isDark ? 'dark' : 'light');
+}
+
+// ═══════════════════════════════════
+// INTERVAL PRESETS
+// ═══════════════════════════════════
+function setInterval_min(min) {
+  state.intervalMin = min;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.min) === min);
+  });
+  if (state.running) scheduleNext();
+}
+
+// ═══════════════════════════════════
+// LOCAL FILE
+// ═══════════════════════════════════
+document.getElementById('localFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  ensureAudioCtx();
+  const ab = await file.arrayBuffer();
+  try {
+    const buffer = await state.audioCtx.decodeAudioData(ab);
+    const id = 'local_' + Date.now();
+    const name = file.name.replace(/\.[^.]+$/, '');
+    state.localSounds.push({ id, name, buffer });
+    state.selectedSound = id;
+    renderSounds();
+  } catch(err) {
+    alert('Nepodařilo se načíst zvuk: ' + err.message);
+  }
+  e.target.value = '';
+});
+
+// ═══════════════════════════════════
+// INSTALL PROMPT
+// ═══════════════════════════════════
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').style.display = 'flex';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  if (outcome === 'accepted') document.getElementById('installBanner').style.display = 'none';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').style.display = 'none';
+});
+
+// ═══════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════
+document.getElementById('mainToggle').addEventListener('click', toggleMain);
+document.getElementById('testBtn').addEventListener('click', () => {
+  ensureAudioCtx();
+  playSelectedSound(1);
+  flashEffect(1);
+});
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+document.getElementById('addSoundBtn').addEventListener('click', () => {
+  document.getElementById('localFileInput').click();
+});
+document.getElementById('volSlider').addEventListener('input', e => setVolume(+e.target.value));
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => setInterval_min(parseInt(btn.dataset.min)));
+});
+
+document.querySelectorAll('.unit-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.getElementById('customVal').addEventListener('change', e => {
+  const v = parseInt(e.target.value);
+  if (isNaN(v) || v < 1) return;
+  const unit = document.querySelector('.unit-btn.active').dataset.unit;
+  const min = unit === 'hr' ? v * 60 : v;
+  state.intervalMin = Math.min(1440, Math.max(1, min));
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (state.running) scheduleNext();
+});
+
+document.getElementById('hourStrikeToggle').addEventListener('click', () => {
+  state.hourStrike = toggleOption('hourStrikeToggle');
+});
+document.getElementById('exactHourToggle').addEventListener('click', () => {
+  state.exactHour = toggleOption('exactHourToggle');
+  if (state.running) scheduleNext();
+});
+document.getElementById('wakeLockToggle').addEventListener('click', () => {
+  const on = toggleOption('wakeLockToggle');
+  if (on && state.running) requestWakeLock();
+  else releaseWakeLock();
+});
+
+// iOS — přidat na plochu hint
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) {
+  const banner = document.getElementById('installBanner');
+  banner.style.display = 'flex';
+  document.getElementById('installBtn').textContent = '?';
+  document.getElementById('installBtn').onclick = () => {
+    alert('V Safari: klepni na Sdílet (□↑) → "Přidat na plochu"');
+  };
+}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+(function init() {
+  // Theme
+  const saved = localStorage.getItem('chime-theme');
+  if (saved === 'light') { state.isDark = false; document.body.classList.add('light'); document.getElementById('themeBtn').textContent = '☀'; }
+
+  // Render
+  renderSounds();
+  renderHistory();
+  setVolume(70);
+
+  // exactHour default on
+  document.getElementById('exactHourToggle').classList.add('on');
+
+  // Clock tick
+  updateClock();
+  setInterval(updateClock, 500);
+
+  // Countdown tick
+  setInterval(updateNextChimeDisplay, 1000);
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW:', e));
+  }
+
+  console.log('%c⬡ Chime loaded', 'color:#c9a84c;font-size:16px;font-weight:bold');
+  console.log('Přidej zvuk do BUILT_IN_SOUNDS pole v index.html — žádné programování nepotřeba!');
+})();
+</script>
+</body>
+</html>
