@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember Chime — Legal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c875;
+    --gold-dim: rgba(201,168,76,0.10);
+    --gold-border: rgba(201,168,76,0.22);
+    --bg: #0a0a14;
+    --bg2: #12121f;
+    --surface: #1e1e3a;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --border: rgba(255,255,255,0.06);
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.75;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(201,168,76,0.04) 0%, transparent 65%);
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,20,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+
+  .nav-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo { font-size: 20px; color: var(--gold); }
+
+  .nav-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-weight: 400;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .nav-tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 6px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-tab.active {
+    background: var(--gold-dim);
+    color: var(--gold);
+    border: 1px solid var(--gold-border);
+  }
+
+  .nav-tab:hover:not(.active) {
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero {
+    margin-bottom: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-label::before { content: '⬡'; color: var(--gold); font-size: 14px; }
+
+  .hero-title {
+    font-size: clamp(36px, 6vw, 52px);
+    font-weight: 300;
+    color: var(--gold);
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 14px;
+    font-family: var(--mono);
+    font-weight: 300;
+  }
+
+  .date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 36px;
+  }
+
+  .date-badge span { color: var(--gold); }
+
+  .block {
+    margin-bottom: 24px;
+    padding: 28px 32px;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-border), transparent);
+  }
+
+  .block-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .block-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gold-border);
+  }
+
+  .block p {
+    color: rgba(232,232,240,0.85);
+    font-size: 16px;
+    line-height: 1.85;
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+
+  .block p:last-child { margin-bottom: 0; }
+
+  .legal-list {
+    list-style: none;
+    margin: 12px 0 14px;
+  }
+
+  .legal-list li {
+    font-size: 16px;
+    color: rgba(232,232,240,0.8);
+    font-weight: 300;
+    padding: 5px 0 5px 22px;
+    position: relative;
+    line-height: 1.7;
+  }
+
+  .legal-list li::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+    font-size: 7px;
+    top: 11px;
+  }
+
+  .highlight {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold-border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 15px;
+    color: rgba(232,232,240,0.85);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .highlight strong { color: var(--gold-light); font-weight: 400; }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 24px 0;
+  }
+
+  a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-border); transition: border-color 0.2s; }
+  a:hover { border-color: var(--gold); }
+
+  .contact-block {
+    background: var(--bg2);
+    border: 1px solid var(--gold-border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .contact-block p {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .contact-email {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gold);
+    border-bottom: 1px solid var(--gold-border);
+    white-space: nowrap;
+  }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 28px 24px;
+  }
+
+  .footer-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-copy, .footer-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .footer-date { opacity: 0.5; }
+
+  @media (max-width: 600px) {
+    .nav-inner { flex-direction: column; align-items: flex-start; }
+    .nav-tabs { width: 100%; }
+    .nav-tab { flex: 1; text-align: center; }
+    main { padding: 40px 16px 60px; }
+    .block { padding: 20px 18px; }
+    .contact-block { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-brand" href="#">
+      <span class="nav-logo">⬡</span>
+      <span class="nav-name">EMBER CHIME</span>
+    </a>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showSection('privacy', this)">Privacy Policy</button>
+      <button class="nav-tab" onclick="showSection('terms', this)">Terms &amp; Conditions</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- PRIVACY POLICY -->
+  <section class="section active" id="privacy">
+    <div class="hero">
+      <div class="hero-label">Legal</div>
+      <h1 class="hero-title">Privacy Policy</h1>
+      <p class="hero-sub">Ember Chime · Free mobile application</p>
+    </div>
+
+    <div class="date-badge">Effective as of <span>2026-05-18</span></div>
+
+    <div class="block">
+      <div class="block-title">Overview</div>
+      <p>This privacy policy applies to the Ember Chime app (referred to as "Application") for mobile devices, provided as a free service. This service is intended for use "AS IS".</p>
+      <div class="highlight"><strong>🔒 Our commitment:</strong> Ember Chime does not collect, store, or transmit any personal data. Everything runs entirely on your device. No accounts, no servers, no tracking.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Information Collection and Use</div>
+      <p>The Application itself does not collect, store, or process any personal information. Specifically:</p>
+      <ul class="legal-list">
+        <li>No user accounts or registration required</li>
+        <li>No analytics or usage tracking</li>
+        <li>No location data collected or transmitted</li>
+        <li>No AI processing of your data</li>
+        <li>All settings (interval, sound, spiritual profile, location coordinates) are stored exclusively on your device using Android's local SharedPreferences and are never transmitted anywhere</li>
+      </ul>
+      <div class="highlight"><strong>📍 Location:</strong> If you use the automatic location detection feature, your coordinates are used solely to calculate local sunrise and sunset times. This calculation happens entirely on-device and your location is never transmitted to any server.</div>
+      <div class="highlight"><strong>🤖 AI:</strong> The Application does not use Artificial Intelligence technologies to process your data or provide features.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Third Party Services</div>
+      <p>The Application is distributed through Google Play Store. Google Play Services may collect certain technical and device information independently, according to their own Privacy Policy. The Application itself has no control over this data collection.</p>
+      <ul class="legal-list">
+        <li><a href="https://policies.google.com/privacy" target="_blank">Google Play Services Privacy Policy</a></li>
+      </ul>
+      <p>Beyond Google Play Services, the Application does not integrate any third-party SDKs, analytics tools, advertising networks, or data brokers.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Opt-Out</div>
+      <p>Since the Application does not collect any personal data, there is nothing to opt out of. You may uninstall the Application at any time using standard processes available on your device or via Google Play Store. All locally stored settings will be removed with the Application.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Data Retention</div>
+      <p>The Application stores your preferences (interval settings, chosen sounds, spiritual profile, and optionally your location coordinates for sunrise/sunset calculation) locally on your device only. This data is never transmitted to any server and is permanently deleted when you uninstall the Application.</p>
+      <p>If you have any concerns, contact us at <a href="mailto:ember@ember-pa.cz">ember@ember-pa.cz</a>.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Children</div>
+      <p>The Application does not address anyone under the age of 13. The Service Provider does not knowingly collect personally identifiable information from children under 13 years of age. If a child under 13 has provided personal information, it will be immediately deleted from our servers.</p>
+      <p>If you are a parent or guardian and aware that your child has provided us with personal information, please contact us at <a href="mailto:ember@ember-pa.cz">ember@ember-pa.cz</a>.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Security</div>
+      <p>The Service Provider is concerned about safeguarding the confidentiality of your information and provides physical, electronic, and procedural safeguards to protect information processed and maintained.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Changes</div>
+      <p>This Privacy Policy may be updated from time to time. The Service Provider will notify you of any changes by updating this page. Continued use of the Application is deemed approval of all changes.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Your Consent</div>
+      <p>By using the Application, you acknowledge that Ember Chime operates entirely on your device without collecting or transmitting personal data, and that Google Play Services may independently collect certain technical information as described in their own Privacy Policy.</p>
+    </div>
+
+    <div class="contact-block">
+      <p>Questions regarding privacy? Contact the Service Provider:</p>
+      <a class="contact-email" href="mailto:ember@ember-pa.cz">ember@ember-pa.cz</a>
+    </div>
+  </section>
+
+  <!-- TERMS & CONDITIONS -->
+  <section class="section" id="terms">
+    <div class="hero">
+      <div class="hero-label">Legal</div>
+      <h1 class="hero-title">Terms &amp; Conditions</h1>
+      <p class="hero-sub">Ember Chime · Free mobile application</p>
+    </div>
+
+    <div class="date-badge">Effective as of <span>2026-05-18</span></div>
+
+    <div class="block">
+      <div class="block-title">Overview</div>
+      <p>These terms and conditions apply to the Ember Chime app for mobile devices, provided as a free service. Upon downloading or utilizing the Application, you are automatically agreeing to the following terms. Please read and understand these terms prior to using the Application.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Intellectual Property</div>
+      <p>Unauthorized copying or modification of the Application, any part of the Application, or our trademarks is strictly prohibited. The following are not permitted:</p>
+      <ul class="legal-list">
+        <li>Extracting the source code of the Application</li>
+        <li>Translating the Application into other languages</li>
+        <li>Creating derivative versions</li>
+      </ul>
+      <p>All trademarks, copyrights, database rights, and other intellectual property rights related to the Application remain the property of the Service Provider.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Service Modifications</div>
+      <p>The Service Provider reserves the right to modify the Application or charge for their services at any time and for any reason. Any charges for the Application or its services will be clearly communicated to you.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Your Responsibilities</div>
+      <p>It is your responsibility to maintain the security of your phone and access to the Application. The Application stores and processes personal data provided to deliver the Service.</p>
+      <div class="highlight"><strong>⚠ Warning:</strong> The Service Provider strongly advises against jailbreaking or rooting your phone. Such actions could expose your device to malware, compromise security features, and may result in the Application not functioning correctly or at all.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Third Party Services</div>
+      <p>The Application utilizes third-party services that have their own Terms and Conditions:</p>
+      <ul class="legal-list">
+        <li><a href="https://policies.google.com/terms" target="_blank">Google Play Services</a></li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Limitations of Liability</div>
+      <p>The Service Provider cannot be held responsible for:</p>
+      <ul class="legal-list">
+        <li>The Application not functioning due to lack of Wi-Fi or exhausted data allowance</li>
+        <li>Mobile network charges, roaming data charges, or other third-party charges incurred while using the Application</li>
+        <li>Device battery running out and inability to access the Service</li>
+        <li>Any loss, direct or indirect, from relying entirely on third-party information provided through the Application</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Updates and Termination</div>
+      <p>The Service Provider may update the Application at any point. OS requirements may change, and updates may be required to continue using the Application. You agree to always accept updates when offered.</p>
+      <p>The Service Provider may cease providing the Application and terminate its use at any time without notice. Upon termination, the rights and licenses granted to you will end, and you must cease using and delete the Application from your device.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Changes to Terms</div>
+      <p>The Service Provider may periodically update these Terms and Conditions. You are advised to review this page regularly. The Service Provider will notify you of any changes by posting the new Terms on this page.</p>
+    </div>
+
+    <div class="contact-block">
+      <p>Questions or suggestions about the Terms? Contact the Service Provider:</p>
+      <a class="contact-email" href="mailto:ember@ember-pa.cz">ember@ember-pa.cz</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">⬡ Ember Chime · © 2026 · All rights reserved</span>
+    <span class="footer-date">Effective 2026-05-18</span>
+  </div>
+</footer>
+
+<script>
+  function showSection(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
